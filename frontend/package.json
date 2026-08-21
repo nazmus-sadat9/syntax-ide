@@ -1,0 +1,30 @@
+{
+  "name": "syntax-ide",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "npx next dev --webpack",
+    "build": "npx next build --webpack",
+    "start": "next start"
+  },
+  "author": "Nazmus Sadat",
+  "keywords": [
+    "Code Editor",
+    "Code IDE",
+    "Tool"
+  ],
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

@@ -35,7 +35,11 @@ const Cli = () => {
       
       fitAddon = new FitAddon();
       term.loadAddon(fitAddon);
-      term.open(terminalRef.current);
+
+      if (terminalRef.current) {
+        term.open(terminalRef.current);
+      }
+
       fitAddon.fit();
 
       try {

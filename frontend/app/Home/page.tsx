@@ -1,7 +1,10 @@
 import CodeEditor from "../components/editor/CodeEditor";
 
+
 export default function HomePage(){
   return (
-    <CodeEditor />
+    <div className="w-screen h-screen">
+      <CodeEditor />
+    </div>
   );
 }

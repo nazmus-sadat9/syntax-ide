@@ -26,7 +26,7 @@ const Editor = () => {
               lineRef.current.scrollTop = e.currentTarget.scrollTop;
             }
           }}
-          className="flex-1 resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-[#fff] outline-none"
+          className="flex-1 font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-[#fff] outline-none"
         ></textarea>
       </div>
     </div >

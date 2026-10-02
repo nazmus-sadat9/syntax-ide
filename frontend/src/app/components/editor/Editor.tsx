@@ -13,6 +13,7 @@ const Editor = () => {
   const [current, setCurrent] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [output, setOutput] = useState<string>("");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const lineRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
@@ -112,35 +113,53 @@ const Editor = () => {
 
       <div className="flex-1 w-full flex flex-col">
         <div className="w-full bg-[#121212] flex justify-between items-center p-[2%]">
+
+          <span className="text-zinc-400 text-sm">{current ?? ""}</span>
+
           <div className="flex items-center gap-3">
 
-            <select className="bg-zinc-800 text-[#fff] px-2 py-1 outline-none cursor-pointer">
-              <option value="node">Node</option>
-              <option value="sandbox">
-                <Link href="/sandbox">Sandbox</Link>
-              </option>
-            </select>
+            <div className="relative cursor-pointer">
 
-            <span className="text-zinc-400 text-sm">{current ?? "No file"}</span>
-          </div>
+              <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="bg-zinc-800 py-1 px-2 text-[#fff] rounded-md"
+              >
+                options
+              </button>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleDownload}
-              disabled={!current}
-              className="py-1 px-4 bg-zinc-700 rounded-md cursor-pointer text-white disabled:opacity-40"
-            >
-              Download
-            </button>
-            <button
-              type="button"
-              onClick={handleRun}
-              disabled={!current}
-              className="py-1 px-4 bg-green-600 rounded-md cursor-pointer text-white disabled:opacity-40"
-            >
-              Run
-            </button>
+              <div className={`${isOpen ? "block" : "hidden"} absolute top-8 bg-[#121212] border-[0.1em] font-serif border-[#222] z-999 left-0 flex flex-col p-2 text-[#aaa]`}>
+                <Link
+                  href="/sandbox"
+                  onClick={() => setIsOpen(false)}
+                  className=""
+                >
+                  Sandbox
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={!current}
+
+                  className="disabled:opacity-40"
+                >
+                  Download
+                </button>
+
+              </div>
+            </div>
+
+            <div className="">
+              <button
+                type="button"
+                onClick={handleRun}
+                disabled={!current}
+                className="py-1 px-4 bg-green-600 rounded-md cursor-pointer text-white disabled:opacity-40"
+              >
+                Run
+              </button>
+            </div>
           </div>
         </div>
 

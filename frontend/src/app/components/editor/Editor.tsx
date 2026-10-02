@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import Sidebar from "./sidebar/Sidebar";
 
 type ServerMessage = {
   type: "stdout" | "stderr" | "done" | "error";
@@ -7,19 +9,38 @@ type ServerMessage = {
 };
 
 const Editor = () => {
-  const [code, setCode] = useState<string>("");
+  const [files, setFiles] = useState<Record<string, string>>({});
+  const [current, setCurrent] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState<boolean>(false);
   const [output, setOutput] = useState<string>("");
   const lineRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
+  const code: string = current ? files[current] ?? "" : "";
   const count: number = code.split("\n").length;
   const numbers: string = Array.from({ length: count }, (_, i) => i + 1).join("\n");
 
-  // load saved code
+  // load saved files
   useEffect(() => {
-    const prevCode: string | null = localStorage.getItem("code");
-    if (prevCode) setCode(prevCode);
+    try {
+      const saved: string | null = localStorage.getItem("files");
+      if (saved) {
+        const parsed: Record<string, string> = JSON.parse(saved);
+        setFiles(parsed);
+        const first: string | undefined = Object.keys(parsed)[0];
+        if (first) setCurrent(first);
+      }
+    } catch { }
+    setLoaded(true);
   }, []);
+
+  // auto save
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      localStorage.setItem("files", JSON.stringify(files));
+    } catch { }
+  }, [files, loaded]);
 
   // websocket connection
   useEffect(() => {
@@ -40,9 +61,38 @@ const Editor = () => {
     return (): void => ws.close();
   }, []);
 
-  function handleRun(): void {
-    localStorage.setItem("code", code);
+  // file ccontrol
+  function handleCreate(name: string): void {
+    setFiles((prev: Record<string, string>) => ({ ...prev, [name]: "" }));
+    setCurrent(name);
+  }
 
+  function handleDelete(name: string): void {
+    const rest: Record<string, string> = { ...files };
+    delete rest[name];
+    setFiles(rest);
+    if (current === name) setCurrent(Object.keys(rest)[0] ?? null);
+  }
+
+  function handleChange(value: string): void {
+    if (!current) return;
+    setFiles((prev: Record<string, string>) => ({ ...prev, [current]: value }));
+  }
+
+  function handleDownload(): void {
+    if (!current) return;
+    const blob = new Blob([code], { type: "text/plain" });
+    const url: string = URL.createObjectURL(blob);
+    const a: HTMLAnchorElement = document.createElement("a");
+    a.href = url;
+    a.download = current;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function handleRun(): void {
     const ws = socketRef.current;
     if (ws && ws.readyState === WebSocket.OPEN && code.trim()) {
       setOutput("");
@@ -51,44 +101,75 @@ const Editor = () => {
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-zinc-900">
-      <div className="w-full bg-[#121212] flex justify-between p-[2%]">
-        <select className="bg-zinc-800 text-[#fff] px-[1%] outline-none cursor-pointer">
-          <option value="node">Node</option>
-        </select>
+    <div className="w-full h-full flex bg-zinc-900">
+      <Sidebar
+        files={files}
+        current={current}
+        onSelect={setCurrent}
+        onCreate={handleCreate}
+        onDelete={handleDelete}
+      />
 
-        <button
-          type="button"
-          onClick={handleRun}
-          className="py-1 px-4 bg-green-600 rounded-md cursor-pointer text-white"
-        >
-          Run
-        </button>
-      </div>
+      <div className="flex-1 w-full flex flex-col">
+        <div className="w-full bg-[#121212] flex justify-between items-center p-[2%]">
+          <div className="flex items-center gap-3">
 
-      <div className="w-full flex-1 flex min-h-0">
-        <div
-          ref={lineRef}
-          className="w-10 overflow-hidden whitespace-pre font-mono py-2.5 pr-2 text-right select-none text-white"
-        >
-          {numbers}
+            <select className="bg-zinc-800 text-[#fff] px-2 py-1 outline-none cursor-pointer">
+              <option value="node">Node</option>
+              <option value="sandbox">
+                <Link href="/sandbox">Sandbox</Link>
+              </option>
+            </select>
+
+            <span className="text-zinc-400 text-sm">{current ?? "No file"}</span>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={!current}
+              className="py-1 px-4 bg-zinc-700 rounded-md cursor-pointer text-white disabled:opacity-40"
+            >
+              Download
+            </button>
+            <button
+              type="button"
+              onClick={handleRun}
+              disabled={!current}
+              className="py-1 px-4 bg-green-600 rounded-md cursor-pointer text-white disabled:opacity-40"
+            >
+              Run
+            </button>
+          </div>
         </div>
 
-        <textarea
-          autoCapitalize="none"
-          spellCheck={false}
-          wrap="off"
-          value={code}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCode(e.target.value)}
-          onScroll={(e: React.UIEvent<HTMLTextAreaElement>) => {
-            if (lineRef.current) lineRef.current.scrollTop = e.currentTarget.scrollTop;
-          }}
-          className="flex-1 font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-[#ddd] outline-none"
-        />
-      </div>
+        <div className="w-full flex-1 flex min-h-0">
+          <div
+            ref={lineRef}
+            className="w-10 overflow-hidden whitespace-pre font-mono py-2.5 pr-2 text-right select-none text-white"
+          >
+            {numbers}
+          </div>
 
-      <div className="w-full h-40 bg-[#121212] text-[#bbb] p-[2%] overflow-auto">
-        <pre className="font-mono whitespace-pre-wrap">{output}</pre>
+          <textarea
+            autoCapitalize="none"
+            spellCheck={false}
+            wrap="off"
+            disabled={!current}
+            placeholder={current ? "" : "Select a file"}
+            value={code}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange(e.target.value)}
+            onScroll={(e: React.UIEvent<HTMLTextAreaElement>) => {
+              if (lineRef.current) lineRef.current.scrollTop = e.currentTarget.scrollTop;
+            }}
+            className="flex-1 font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-[#ddd] outline-none"
+          />
+        </div>
+
+        <div className="w-full h-40 bg-[#121212] text-[#bbb] p-[2%] overflow-auto">
+          <pre className="font-mono whitespace-pre-wrap">{output}</pre>
+        </div>
       </div>
     </div>
   );

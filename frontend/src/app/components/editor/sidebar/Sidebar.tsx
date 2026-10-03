@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 
 type SidebarProps = {
   files: Record<string, string>;
@@ -41,6 +42,7 @@ const Sidebar = ({ files, current, onSelect, onCreate, onDelete }: SidebarProps)
           spellCheck={false}
           className="w-full bg-zinc-800 text-white px-2 py-1 rounded outline-none text-sm"
         />
+
         <button
           type="button"
           onClick={handleCreate}
@@ -48,6 +50,7 @@ const Sidebar = ({ files, current, onSelect, onCreate, onDelete }: SidebarProps)
         >
           New file
         </button>
+
         {error && <p className="text-red-400 text-xs">{error}</p>}
       </div>
 
@@ -56,13 +59,25 @@ const Sidebar = ({ files, current, onSelect, onCreate, onDelete }: SidebarProps)
           <li className="px-2 py-1 text-xs text-zinc-500">Empty</li>
         )}
         {Object.keys(files).map((fileName: string) => (
+
           <li
             key={fileName}
             onClick={() => onSelect(fileName)}
             className={`group flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer ${fileName === current ? "bg-zinc-800 text-white" : "hover:bg-zinc-900"
               }`}
           >
+
+            <span>
+              <Image
+                src={`icons/${fileName.split(".").pop()}.svg`}
+                alt="icon"
+                width={16}
+                height={16}
+              />
+            </span>
+
             <span className="truncate">{fileName}</span>
+
             <button
               type="button"
               aria-label={`Delete ${fileName}`}
@@ -74,6 +89,7 @@ const Sidebar = ({ files, current, onSelect, onCreate, onDelete }: SidebarProps)
             >
               ×
             </button>
+
           </li>
         ))}
       </ul>

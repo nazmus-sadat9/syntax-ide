@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 
+// props type
 type SidebarProps = {
   files: Record<string, string>;
   current: string | null;
@@ -14,8 +15,11 @@ const Sidebar = ({ files, current, onSelect, onCreate, onDelete }: SidebarProps)
   const [name, setName] = useState<string>("");
   const [error, setError] = useState<string>("");
 
+  // handle the file creation
   function handleCreate(): void {
+
     const clean: string = name.trim();
+
     if (!clean) return setError("Enter a file name");
     if (/[\\/]/.test(clean)) return setError("/ ba \\ use kora jabe na");
     if (clean in files) return setError("Already exiest");

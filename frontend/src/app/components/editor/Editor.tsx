@@ -3,48 +3,82 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Sidebar from "./sidebar/Sidebar";
 
+type Language = "js" | "cpp" | "c";
+
 type ServerMessage = {
   type: "stdout" | "stderr" | "done" | "error";
   data: string;
 };
 
+// supported langs judge0
+const JUDGE0_LANG_IDS: Record<Exclude<Language, "js">, number> = {
+  cpp: 54, // C++ (GCC 9.2.0)
+  c: 50,   // C (GCC 9.2.0)
+};
+
 const Editor = () => {
+
+  // States
   const [files, setFiles] = useState<Record<string, string>>({});
   const [current, setCurrent] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [output, setOutput] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [language, setLanguage] = useState<Language>("js");
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+
+  // references
   const lineRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
   const code: string = current ? files[current] ?? "" : "";
+
+  // editor line number
   const count: number = code.split("\n").length;
   const numbers: string = Array.from({ length: count }, (_, i) => i + 1).join("\n");
 
-  // load saved files
+  // Load saved files
   useEffect(() => {
     try {
+
       const saved: string | null = localStorage.getItem("files");
+
       if (saved) {
         const parsed: Record<string, string> = JSON.parse(saved);
         setFiles(parsed);
         const first: string | undefined = Object.keys(parsed)[0];
         if (first) setCurrent(first);
       }
+
     } catch { }
+
     setLoaded(true);
   }, []);
 
-  // auto save
+  // Auto save
   useEffect(() => {
     if (!loaded) return;
+
     try {
       localStorage.setItem("files", JSON.stringify(files));
+
     } catch { }
   }, [files, loaded]);
 
-  // websocket connection
+  // auto detect the language
   useEffect(() => {
+
+    if (!current) return;
+    if (current.endsWith(".cpp")) setLanguage("cpp");
+    else if (current.endsWith(".c")) setLanguage("c");
+    else if (current.endsWith(".js")) setLanguage("js");
+
+  }, [current]);
+
+
+  // WebSocket connection for JS execution
+  useEffect(() => {
+
     const apiUrl: string = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     const ws = new WebSocket(apiUrl.replace(/^http/, "ws"));
     socketRef.current = ws;
@@ -54,6 +88,9 @@ const Editor = () => {
     ws.onmessage = (event: MessageEvent<string>): void => {
       const msg: ServerMessage = JSON.parse(event.data);
       setOutput((prev: string) => prev + msg.data + (msg.type === "done" || msg.type === "error" ? "\n" : ""));
+      if (msg.type === "done" || msg.type === "error") {
+        setIsRunning(false);
+      }
     };
 
     ws.onerror = (): void => console.error("WebSocket error: is the backend running?");
@@ -62,12 +99,14 @@ const Editor = () => {
     return (): void => ws.close();
   }, []);
 
-  // file ccontrol
+
+  // create file
   function handleCreate(name: string): void {
     setFiles((prev: Record<string, string>) => ({ ...prev, [name]: "" }));
     setCurrent(name);
   }
 
+  // delete file
   function handleDelete(name: string): void {
     const rest: Record<string, string> = { ...files };
     delete rest[name];
@@ -80,6 +119,7 @@ const Editor = () => {
     setFiles((prev: Record<string, string>) => ({ ...prev, [current]: value }));
   }
 
+  // code download api
   function handleDownload(): void {
     if (!current) return;
     const blob = new Blob([code], { type: "text/plain" });
@@ -93,16 +133,73 @@ const Editor = () => {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  function handleRun(): void {
-    const ws = socketRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN && code.trim()) {
-      setOutput("");
-      ws.send(code);
+  // Execute C / Cpp using judge0
+  async function runCompiledLanguage(lang: "cpp" | "c") {
+
+    setIsRunning(true);
+    setOutput("Compiling and executing...\n");
+
+    try {
+      // sent the code to judge0
+      const response = await fetch("https://ce.judge0.com/submissions?wait=true", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language_id: JUDGE0_LANG_IDS[lang],
+          source_code: code,
+        }),
+      });
+
+      // get the data (output and error)
+      const data = await response.json();
+
+      if (data.stdout) {
+        setOutput(data.stdout);
+
+      } else if (data.compile_output) {
+        setOutput("Compilation Error:\n" + data.compile_output);
+
+      } else if (data.stderr) {
+        setOutput("Runtime Error:\n" + data.stderr);
+
+      } else {
+        setOutput("Execution finished with no output.");
+
+      }
+    } catch (err: unknown) {
+
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setOutput("Network/Execution Error: " + errorMessage);
+
+    } finally {
+      setIsRunning(false);
     }
   }
 
+  // Run Handler
+  function handleRun(): void {
+    if (!code.trim() || isRunning) return;
+
+    if (language === "js") {
+      const ws = socketRef.current; // executing for js
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        setOutput("");
+        setIsRunning(true);
+        ws.send(code);
+
+      } else {
+        setOutput("WebSocket is not connected."); // executing for c/cpp
+      }
+    } else {
+      runCompiledLanguage(language);
+    }
+  }
+
+
   return (
     <div className="w-full h-full flex bg-zinc-900">
+
       <Sidebar
         files={files}
         current={current}
@@ -113,26 +210,38 @@ const Editor = () => {
 
       <div className="flex-1 w-full flex flex-col">
         <div className="w-full bg-[#121212] flex justify-between items-center p-[2%]">
-
           <span className="text-zinc-400 text-sm">{current ?? ""}</span>
 
           <div className="flex items-center gap-3">
+            {/* Language Selection*/}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              className="bg-zinc-800 text-white text-sm py-1 px-2 rounded-md outline-none border border-zinc-700 cursor-pointer"
+            >
+              <option value="js">JavaScript</option>
+              <option value="c">C</option>
+              <option value="cpp">C++</option>
+            </select>
 
+            {/* Options Dropdown */}
             <div className="relative cursor-pointer">
-
               <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="bg-zinc-800 py-1 px-2 text-[#fff] rounded-md"
+                className="bg-zinc-800 py-1 px-2 text-[#fff] rounded-md text-sm"
               >
-                options
+                Options
               </button>
 
-              <div className={`${isOpen ? "block" : "hidden"} absolute top-8 bg-[#121212] border-[0.1em] font-serif border-[#222] z-999 left-0 flex flex-col p-2 text-[#aaa]`}>
+              <div
+                className={`${isOpen ? "block" : "hidden"
+                  } absolute top-8 bg-[#121212] border-[0.1em] border-[#222] z-50 left-0 flex flex-col p-2 text-[#aaa] min-w-[100px]`}
+              >
                 <Link
                   href="/sandbox"
                   onClick={() => setIsOpen(false)}
-                  className=""
+                  className="hover:text-white py-1"
                 >
                   Sandbox
                 </Link>
@@ -141,23 +250,22 @@ const Editor = () => {
                   type="button"
                   onClick={handleDownload}
                   disabled={!current}
-
-                  className="disabled:opacity-40"
+                  className="text-left disabled:opacity-40 hover:text-white py-1"
                 >
                   Download
                 </button>
-
               </div>
             </div>
 
-            <div className="">
+            {/* Run Button */}
+            <div>
               <button
                 type="button"
                 onClick={handleRun}
-                disabled={!current}
-                className="py-1 px-4 bg-green-600 rounded-md cursor-pointer text-white disabled:opacity-40"
+                disabled={!current || isRunning}
+                className="py-1 px-4 bg-green-600 hover:bg-green-500 rounded-md cursor-pointer text-white disabled:opacity-40 text-sm transition-colors"
               >
-                Run
+                {isRunning ? "Running..." : "Run"}
               </button>
             </div>
           </div>
@@ -166,7 +274,7 @@ const Editor = () => {
         <div className="w-full flex-1 flex min-h-0">
           <div
             ref={lineRef}
-            className="w-10 overflow-hidden whitespace-pre font-mono py-2.5 pr-2 text-right select-none text-white"
+            className="w-10 overflow-hidden whitespace-pre font-mono py-2.5 pr-2 text-right select-none text-zinc-500 bg-[#121212]"
           >
             {numbers}
           </div>
@@ -176,18 +284,19 @@ const Editor = () => {
             spellCheck={false}
             wrap="off"
             disabled={!current}
-            placeholder={current ? "" : "Select a file"}
+            placeholder={current ? "" : "Select or create a file"}
             value={code}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange(e.target.value)}
             onScroll={(e: React.UIEvent<HTMLTextAreaElement>) => {
               if (lineRef.current) lineRef.current.scrollTop = e.currentTarget.scrollTop;
             }}
-            className="flex-1 font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-[#ddd] outline-none"
+            className="flex-1 font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-[#ddd] bg-zinc-900 outline-none"
           />
         </div>
 
-        <div className="w-full h-40 bg-[#121212] text-[#bbb] p-[2%] overflow-auto">
-          <pre className="font-mono whitespace-pre-wrap">{output}</pre>
+        {/* Output Section */}
+        <div className="w-full h-40 bg-[#121212] text-[#bbb] p-3 border-t border-zinc-800 overflow-auto">
+          <pre className="font-mono text-sm whitespace-pre-wrap">{output}</pre>
         </div>
       </div>
     </div>

@@ -1,22 +1,21 @@
-import type { Token, Grammer } from "./types";
+import type { Token, Grammar } from "./types";
 import { js } from "./languages/js";
 
-const grammers: Record<string, Grammer> = {
+const grammars: Record<string, Grammar> = {
   js,
 }
 
 export function tokenize(code: string, language: string = "js"): Token[] {
 
-  const grammer = grammers[language] || js
+  const grammar = grammars[language] || js
 
   const tokens: Token[] = [];
   let index: number = 0;
-
-  // tokenize from code
+                                                                          // tokenize from code
   while (index < code.length) {
     let matched: boolean = false;
 
-    for (const [type, pattern] of grammer.rules) {
+    for (const [type, pattern] of grammar.rules) {
       pattern.lastIndex = index;
       const match = pattern.exec(code);
 
@@ -24,7 +23,7 @@ export function tokenize(code: string, language: string = "js"): Token[] {
         const value = match[0];
         let tokenType = type;
 
-        if (type === "word" && grammer.keywords.includes(value)) {
+        if (type === "word" && grammar.keywords.includes(value)) {
           tokenType = "keyword"
         }
 

@@ -7,7 +7,8 @@ export type Token = {
 
 export type Rule = [type: string, pattern: RegExp];
 
-export type Grammer = {
+export type Grammar = {
   keywords: string[];
   rules: Rule[];
 };
+

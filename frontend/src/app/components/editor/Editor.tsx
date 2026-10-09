@@ -3,7 +3,8 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Sidebar from "./sidebar/Sidebar";
 import { tokenize } from "@/lib/highlighter/tokenize";
-import type { Token } from "@/lib/highlighter/types"
+import type { Token } from "@/lib/highlighter/types";
+import { tokenStyles } from "@/lib/highlighter/styles";
 
 // language types 
 type Language = "js" | "cpp" | "c";
@@ -217,7 +218,6 @@ const Editor = () => {
           </div>
         </div>
 
-        {/* Editor Area */}
         <div className="w-full flex-1 flex min-h-0">
           <div
             ref={lineRef}
@@ -226,19 +226,39 @@ const Editor = () => {
             {numbers}
           </div>
 
-          <textarea
-            autoCapitalize="none"
-            spellCheck={false}
-            wrap="off"
-            disabled={!current}
-            placeholder={current ? "" : "Select or create a file"}
-            value={code}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange(e.target.value)}
-            onScroll={(e: React.UIEvent<HTMLTextAreaElement>) => {
-              if (lineRef.current) lineRef.current.scrollTop = e.currentTarget.scrollTop;
-            }}
-            className="flex-1 font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-[#ddd] bg-zinc-900 outline-none"
-          />
+          {/* Editor container */}
+          <div className="relative flex-1 h-full overflow-hidden">
+
+            {/* Display hightlighting */}
+            <pre
+              aria-hidden="true"
+              className="absolute inset-0 m-0 p-0 py-2.5 pl-2 font-mono whitespace-pre overflow-hidden pointer-events-none text-transparent leading-normal"
+            >
+              {tokens.map((token, index) => (
+                <span
+                  key={index}
+                  className={tokenStyles[token.type] || tokenStyles.word}
+                >
+                  {token.value}
+                </span>
+              ))}
+            </pre>
+
+            {/* Input area */}
+            <textarea
+              autoCapitalize="none"
+              spellCheck={false}
+              wrap="off"
+              disabled={!current}
+              placeholder={current ? "" : "Select or create a file"}
+              value={code}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange(e.target.value)}
+              onScroll={(e: React.UIEvent<HTMLTextAreaElement>) => {
+                if (lineRef.current) lineRef.current.scrollTop = e.currentTarget.scrollTop;
+              }}
+              className="absolute inset-0 w-full h-full bg-transparent font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-transparent caret-white leading-normal outline-none"
+            />
+          </div>
         </div>
 
         {/* Output Panel */}

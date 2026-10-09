@@ -1,6 +1,6 @@
-import type { Grammer } from "../types"
+import type { Grammar } from "../types"
 
-export const js: Grammer = {
+export const js: Grammar = {
   keywords: [
     "const", "let", "var", "function", "return", "if", "else",
     "for", "while", "break", "continue", "switch", "case",

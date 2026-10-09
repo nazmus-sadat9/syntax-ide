@@ -28,6 +28,7 @@ const Editor = () => {
 
   // references
   const lineRef = useRef<HTMLDivElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
   const code: string = current ? files[current] ?? "" : "";
@@ -231,6 +232,7 @@ const Editor = () => {
 
             {/* Display hightlighting */}
             <pre
+              ref={preRef}
               aria-hidden="true"
               className="absolute inset-0 m-0 p-0 py-2.5 pl-2 font-mono whitespace-pre overflow-hidden pointer-events-none text-transparent leading-normal"
             >
@@ -254,7 +256,16 @@ const Editor = () => {
               value={code}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange(e.target.value)}
               onScroll={(e: React.UIEvent<HTMLTextAreaElement>) => {
-                if (lineRef.current) lineRef.current.scrollTop = e.currentTarget.scrollTop;
+                const { scrollTop, scrollLeft } = e.currentTarget;
+
+                if (lineRef.current) {
+                  lineRef.current.scrollTop = scrollTop;
+                }
+
+                if (preRef.current) {
+                  preRef.current.scrollTop = scrollTop;
+                  preRef.current.scrollLeft = scrollLeft;
+                }
               }}
               className="absolute inset-0 w-full h-full bg-transparent font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-transparent caret-white leading-normal outline-none"
             />

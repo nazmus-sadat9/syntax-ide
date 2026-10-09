@@ -1,7 +1,9 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Sidebar from "./sidebar/Sidebar";
+import { tokenize } from "@/lib/highlighter/tokenize";
+import type { Token } from "@/lib/highlighter/types"
 
 // language types 
 type Language = "js" | "cpp" | "c";
@@ -28,6 +30,13 @@ const Editor = () => {
   const socketRef = useRef<WebSocket | null>(null);
 
   const code: string = current ? files[current] ?? "" : "";
+
+  const tokens: Token[] = useMemo(() => {
+    if (!code) return [];
+
+    return tokenize(code, language);
+
+  }, [code, language]);
 
   // editor line number s
   const count: number = code.split("\n").length;

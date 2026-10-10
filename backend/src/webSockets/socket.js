@@ -113,6 +113,43 @@ export function initWebSocket(server) {
         return;
       }
 
+      // Go
+      if (language === "go") {
+        const sourceFile = path.join(TEMP_DIR, `${fileId}.go`);
+        const binaryFile = path.join(TEMP_DIR, `${fileId}.out`);
+
+        fs.writeFileSync(sourceFile, code);
+
+        exec(`go build -o "${binaryFile}" "${sourceFile}"`, { timeout: 15000 }, (compileErr, stdout, stderr) => {
+          if (stderr) send(ws, "stderr", stderr);
+
+          if (compileErr) {
+            cleanupFiles([sourceFile, binaryFile]);
+            send(ws, "error", "\n[Compilation Failed]");
+            return;
+          }
+
+          const child = spawn(binaryFile);
+          activeChild = child;
+
+          const timer = setTimeout(() => {
+            child.kill("SIGKILL");
+            send(ws, "error", "Timed out after 5 seconds");
+          }, 5000);
+
+          child.stdout.on("data", (d) => send(ws, "stdout", d.toString()));
+          child.stderr.on("data", (d) => send(ws, "stderr", d.toString()));
+
+          child.on("close", (exitCode) => {
+            clearTimeout(timer);
+            send(ws, "done", `\n[exited with code ${exitCode}]`);
+            cleanupFiles([sourceFile, binaryFile]);
+            activeChild = null;
+          });
+        });
+        return;
+      }
+
       send(ws, "error", `Unsupported language: ${language}`);
     });
 

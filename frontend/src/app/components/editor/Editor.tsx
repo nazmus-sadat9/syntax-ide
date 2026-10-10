@@ -69,9 +69,10 @@ const Editor = () => {
   // auto detect language 
   useEffect(() => {
     if (!current) return;
-    if (current.endsWith(".cpp")) setLanguage("cpp");
+    if (current.endsWith(".cpp") || current.endsWith(".cc") || current.endsWith(".cxx")) setLanguage("cpp");
     else if (current.endsWith(".c")) setLanguage("c");
     else if (current.endsWith(".js") || current.endsWith(".ts")) setLanguage("js");
+    else if (current.endsWith(".go")) setLanguage("go")
   }, [current]);
 
   // websocket for js, c, cpp 
@@ -138,6 +139,7 @@ const Editor = () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       setOutput("");
       setIsRunning(true);
+
       // send json with code and language 
       ws.send(JSON.stringify({ language, code }));
     } else {
@@ -170,6 +172,7 @@ const Editor = () => {
               <option value="js">JavaScript</option>
               <option value="cpp">C++</option>
               <option value="c">C</option>
+              <option value="go">Go</option>
             </select>
 
             {/* Options Dropdown */}

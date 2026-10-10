@@ -1,8 +1,14 @@
 import type { Token, Grammar } from "./types";
 import { js } from "./languages/js";
+import { cpp } from "./languages/cpp";
+import { c } from "./languages/c";
+import { go } from "./languages/go"
 
 const grammars: Record<string, Grammar> = {
   js,
+  c,
+  cpp,
+  go,
 }
 
 export function tokenize(code: string, language: string = "js"): Token[] {
@@ -11,7 +17,7 @@ export function tokenize(code: string, language: string = "js"): Token[] {
 
   const tokens: Token[] = [];
   let index: number = 0;
-                                                                          // tokenize from code
+  // tokenize from code
   while (index < code.length) {
     let matched: boolean = false;
 

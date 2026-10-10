@@ -7,7 +7,7 @@ import type { Token } from "@/lib/highlighter/types";
 import { tokenStyles } from "@/lib/highlighter/styles";
 
 // language types 
-type Language = "js" | "cpp" | "c";
+type Language = "js" | "cpp" | "c" | "go";
 
 // server message tyoes 
 type ServerMessage = {

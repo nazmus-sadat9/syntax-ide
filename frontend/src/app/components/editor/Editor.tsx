@@ -205,6 +205,22 @@ const Editor = () => {
                 >
                   Download
                 </button>
+
+                <Link
+                  href="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="hover:text-white py-1"
+                >
+                  Sign up
+                </Link>
+
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="hover:text-white py-1"
+                >
+                  Login
+                </Link>
               </div>
             </div>
 

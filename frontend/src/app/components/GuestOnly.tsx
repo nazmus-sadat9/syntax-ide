@@ -1,17 +1,20 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/hooks/useAuth";
 
 export default function GuestOnly({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
   const router = useRouter();
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) router.replace("/");
-  }, [user, loading, router]);
+    if (localStorage.getItem("token")) {
+      router.replace("/");
+    } else {
+      setChecked(true);
+    }
+  }, [router]);
 
-  if (loading || user) return null;
+  if (!checked) return null;
 
   return <>{children}</>;
 }

@@ -198,7 +198,7 @@ export const updateUser = async (req, res) => {
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         message: "Nothing to change."
-      }):
+      });
     }
 
     const user = User.findByIdAndUpdate(
@@ -230,6 +230,6 @@ export const updateUser = async (req, res) => {
 
     res.status(500).json({
       message: "Server error."
-    })
+    }):
   }
 }

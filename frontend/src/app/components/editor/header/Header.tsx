@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { useAuth } from "../../../hooks/useAuth";
+import { useAuth } from "@/app/hooks/useAuth";
 
 const Header = () => {
 
   const { user, loading } = useAuth();
-
-  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="w-full text-white flex justify-between items-center p-4 bg-[#121212] border-b border-zinc-800">
@@ -14,7 +12,7 @@ const Header = () => {
       </div>
 
       <div>
-        {user ? (
+        {loading ? null : user ? (
           <div>
             <Link href="/profile">{user.username}</Link>
           </div>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -9,6 +10,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const saveAndGo = (data: { token: string; user: unknown }) => {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    router.push("/");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +38,7 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      router.push("/");
+      saveAndGo(data);
     } catch {
       setError("Cannot reach the server");
     } finally {
@@ -41,47 +46,95 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogle = async (credential?: string) => {
+    if (!credential) {
+      setError("Google login failed");
+      return;
+    }
+    setError("");
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/google`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ credential }),
+        }
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Google login failed");
+        return;
+      }
+
+      saveAndGo(data);
+    } catch {
+      setError("Cannot reach the server");
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-2xl bg-zinc-900 p-6"
-      >
-        <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
-
-        {error && <p className="text-sm text-red-400">{error}</p>}
-
-        <button
-          disabled={loading}
-          className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white disabled:opacity-50"
+    <GoogleOAuthProvider
+      clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
+    >
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-sm space-y-4 rounded-2xl bg-zinc-900 p-6"
         >
-          {loading ? "Please wait..." : "Login"}
-        </button>
+          <h1 className="text-2xl font-bold text-white">Welcome back</h1>
 
-        <p className="text-center text-sm text-zinc-400">
-          No account yet?{" "}
-          <Link href="/register" className="text-blue-400">
-            Register
-          </Link>
-        </p>
-      </form>
-    </div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+
+          {error && <p className="text-sm text-red-400">{error}</p>}
+
+          <button
+            disabled={loading}
+            className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white disabled:opacity-50"
+          >
+            {loading ? "Please wait..." : "Login"}
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-zinc-700" />
+            <span className="text-xs text-zinc-500">or</span>
+            <div className="h-px flex-1 bg-zinc-700" />
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={(r) => handleGoogle(r.credential)}
+              onError={() => setError("Google login failed")}
+              theme="filled_black"
+              text="continue_with"
+            />
+          </div>
+
+          <p className="text-center text-sm text-zinc-400">
+            No account yet?{" "}
+            <Link href="/register" className="text-blue-400">
+              Register
+            </Link>
+          </p>
+        </form>
+      </div>
+    </GoogleOAuthProvider>
   );
 }

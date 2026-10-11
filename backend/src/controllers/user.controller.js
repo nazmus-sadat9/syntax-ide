@@ -169,3 +169,67 @@ export const googleLogin = async (req, res) => {
   }
 }
 
+// GET api/users/updateProfile
+export const updateUser = async (req, res) => {
+  try {
+    const { username, bio } = req.body;
+    const updates = {};
+
+    if (username !== undefined) {
+      if (typeof username !== "string") {
+        return res.status(400).json({
+          message: "Invalid username."
+        });
+      }
+
+      updates.username = username;
+    }
+
+    if (bio !== undefined) {
+      if (typeof bio !== "string") {
+        return res.status(400).json({
+          message: "Invalid bio."
+        });
+      }
+
+      updates.bio = bio;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        message: "Nothing to change."
+      }):
+    }
+
+    const user = User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    res.status(200).json(user);
+
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        message: "User already taken."
+      });
+    }
+
+    if (err.message === "ValidationError") {
+      return res.status(400).json({
+        message: err.message
+      });
+    }
+
+    res.status(500).json({
+      message: "Server error."
+    })
+  }
+}

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type User = { id: string; username: string; email: string; bio?: string };
+type User = { id: string; username: string; email: string; bio?: string; github?: string };
 
 const API = `${process.env.NEXT_PUBLIC_API_URL}/api/users`;
 
@@ -10,11 +10,17 @@ export function useAuth() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const clearSession = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
 
@@ -23,17 +29,22 @@ export function useAuth() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success) setUser(data.user);
-        else {
-          localStorage.removeItem("token");
-          router.push("/login");
+        if (data.success) {
+          setUser(data.user);
+
+        } else {
+          clearSession();
+          router.replace("/login");
         }
       })
-      .catch(() => router.push("/login"))
+      .catch(() => {
+        setError("Cannot reach the server");
+      })
       .finally(() => setLoading(false));
+
   }, [router]);
 
-  const updateUser = async (changes: { username?: string; bio?: string }) => {
+  const updateUser = async (changes: { username?: string; bio?: string; github?: string }) => {
     const token = localStorage.getItem("token");
 
     const res = await fetch(`${API}/me`, {
@@ -55,10 +66,9 @@ export function useAuth() {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearSession();
     router.push("/login");
   };
 
-  return { user, loading, logout, updateUser };
+  return { user, loading, error, logout, updateUser };
 }

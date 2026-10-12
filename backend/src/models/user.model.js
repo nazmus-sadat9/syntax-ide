@@ -36,6 +36,12 @@ const userSchema = new mongoose.Schema(
       maxlength: 100
     },
 
+    github: {
+      type: String,
+      default: "",
+      trim: true
+    },
+
   },
 
   { timestamps: true }

@@ -173,7 +173,7 @@ export const googleLogin = async (req, res) => {
 // GET api/users/updateProfile
 export const updateUser = async (req, res) => {
   try {
-    const { username, bio } = req.body;
+    const { username, bio, github } = req.body;
     const updates = {};
 
     if (username !== undefined) {
@@ -196,6 +196,17 @@ export const updateUser = async (req, res) => {
       }
 
       updates.bio = bio;
+    }
+
+    if (github !== undefined) {
+      if (typeof github !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid github link."
+        });
+      }
+
+      updates.github = github;
     }
 
     if (Object.keys(updates).length === 0) {

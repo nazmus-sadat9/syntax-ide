@@ -116,7 +116,8 @@ export const me = (req, res) => {
     user: {
       id: req.user._id,
       username: req.user.username,
-      email: req.user.email
+      email: req.user.email,
+      bio: req.user.bio
     },
   });
 };

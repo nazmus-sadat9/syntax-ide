@@ -117,7 +117,8 @@ export const me = (req, res) => {
       id: req.user._id,
       username: req.user.username,
       email: req.user.email,
-      bio: req.user.bio
+      bio: req.user.bio,
+      github: req.user.github
     },
   });
 };

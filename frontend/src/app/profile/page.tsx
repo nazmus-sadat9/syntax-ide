@@ -34,6 +34,7 @@ export default function ProfilePage() {
     setMsg("");
 
     const changes: { username?: string; bio?: string; github?: string } = {};
+
     if (username.trim()) changes.username = username.trim();
     if (bio.trim()) changes.bio = bio.trim();
     if (github.trim()) changes.github = github.trim();
@@ -104,7 +105,7 @@ export default function ProfilePage() {
             {user?.username[0]}
           </div>
 
-          <div className="px-7 flex justify-between items-center">
+          <div className="py-2 flex justify-between items-center">
 
             <div>
               <p className="text-white">{user?.username}</p>
@@ -112,7 +113,7 @@ export default function ProfilePage() {
               {user?.bio && <p className="text-sm text-zinc-400 mt-1">{user.bio}</p>}
             </div>
 
-            <div>
+            <div className="px-4">
               {user?.github && (
                 <a
                   href={user.github}

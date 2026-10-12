@@ -178,6 +178,7 @@ export const updateUser = async (req, res) => {
     if (username !== undefined) {
       if (typeof username !== "string") {
         return res.status(400).json({
+          success: false,
           message: "Invalid username."
         });
       }
@@ -188,6 +189,7 @@ export const updateUser = async (req, res) => {
     if (bio !== undefined) {
       if (typeof bio !== "string") {
         return res.status(400).json({
+          success: false,
           message: "Invalid bio."
         });
       }
@@ -197,11 +199,12 @@ export const updateUser = async (req, res) => {
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
+        success: false,
         message: "Nothing to change."
       });
     }
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
       req.user.id,
       { $set: updates },
       { new: true, runValidators: true }
@@ -209,26 +212,33 @@ export const updateUser = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
+        success: false,
         message: "User not found"
       });
     }
 
-    res.status(200).json(user);
+    res.status(200).json({
+      success: true,
+      user: user
+    });
 
   } catch (err) {
     if (err.code === 11000) {
       return res.status(409).json({
+        success: false,
         message: "User already taken."
       });
     }
 
-    if (err.message === "ValidationError") {
+    if (err.name === "ValidationError") {
       return res.status(400).json({
+        success: false,
         message: err.message
       });
     }
 
     res.status(500).json({
+      success: false,
       message: "Server error."
     });
   }

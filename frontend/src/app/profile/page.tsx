@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
+import { faPenToSquare } from "@fortawesome/free-regular-svg-icons";
 
 export default function ProfilePage() {
   const [username, setUsername] = useState<string>("");
@@ -14,7 +15,34 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const { user, loading, logout, updateUser } = useAuth();
 
-  if (loading) return <p className="text-zinc-400 p-4 bg-zinc-950 min-h-screen">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="w-screen min-h-screen bg-zinc-950 flex justify-center items-center px-4">
+        <nav className="w-full border-b border-zinc-800 fixed top-0 left-0 flex justify-between items-center px-[10%] py-4">
+          <div className="h-4 w-12 rounded bg-zinc-800 animate-pulse" />
+          <div className="flex gap-4 items-center">
+            <div className="h-4 w-20 rounded bg-zinc-800 animate-pulse" />
+            <div className="h-4 w-14 rounded bg-zinc-800 animate-pulse" />
+          </div>
+        </nav>
+
+        <div className="md:w-[80%] w-[90%] max-w-2xl flex flex-col gap-5 p-5 bg-zinc-900 border border-zinc-800 rounded-xl">
+          <div className="flex justify-end">
+            <div className="h-7 w-16 rounded-md bg-zinc-800 animate-pulse" />
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-24 aspect-square rounded-full bg-zinc-800 animate-pulse" />
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="h-4 w-1/2 rounded bg-zinc-800 animate-pulse" />
+              <div className="h-3 w-2/3 rounded bg-zinc-800 animate-pulse" />
+              <div className="h-3 w-full rounded bg-zinc-800 animate-pulse" />
+            </div>
+            <div className="w-10 h-10 rounded-full bg-zinc-800 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleEdit = () => {
     setMsg("");
@@ -49,6 +77,7 @@ export default function ProfilePage() {
       await updateUser(changes);
       setUsername("");
       setBio("");
+      setGithub("");
       setIsEditing(false);
       setMsg("Profile updated successfully.");
     } catch (err) {
@@ -60,7 +89,6 @@ export default function ProfilePage() {
 
   return (
     <div className="w-screen min-h-screen bg-zinc-950 flex justify-center items-center px-4 text-zinc-200">
-
       <nav className="w-full border-b border-zinc-800 fixed top-0 left-0 flex justify-between items-center px-[10%] py-4">
         <div>
           <Link className="text-white" href="/">Home</Link>
@@ -68,30 +96,27 @@ export default function ProfilePage() {
 
         <div className="flex gap-4">
           <h3 className="font-bold p-2 text-white">{user?.username}</h3>
-          <button
-            type="submit"
-            onClick={logout}
-            className="p-2 text-white"
-          >
+          <button type="button" onClick={logout} className="p-2 text-white">
             Logout
           </button>
         </div>
       </nav>
 
-      <div className="md:w-[80%] w-[90%] flex flex-col gap-3 p-4 bg-zinc-900 border border-zinc-800 rounded-md">
+      <div className="md:w-[80%] w-[90%] max-w-2xl flex flex-col gap-4 p-5 bg-zinc-900 border border-zinc-800 rounded-xl shadow-lg shadow-black/30">
         {/* Header */}
         <div className="w-full flex items-center justify-end">
           {!isEditing ? (
             <button
               onClick={handleEdit}
-              className="text-xs px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
+              className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 active:scale-95 transition text-zinc-200"
             >
+              <FontAwesomeIcon icon={faPenToSquare} />
               Edit
             </button>
           ) : (
             <button
               onClick={handleClose}
-              className="text-xs px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
+              className="text-xs px-3 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 active:scale-95 transition text-zinc-200"
             >
               Close
             </button>
@@ -99,48 +124,48 @@ export default function ProfilePage() {
         </div>
 
         {/* User Info */}
-        <div className="flex flex-col gap-2">
-
-          <div className="w-24 aspect-[1/1] rounded-full bg-zinc-700 flex justify-center items-center text-[clamp(1rem,4vw,2rem)]">
-            {user?.username[0]}
-          </div>
-
-          <div className="py-2 flex justify-between items-center">
-
-            <div>
-              <p className="text-white">{user?.username}</p>
-              <p className="text-xs text-zinc-500">{user?.email}</p>
-              {user?.bio && <p className="text-sm text-zinc-400 mt-1">{user.bio}</p>}
-            </div>
-
-            <div className="px-4">
-              {user?.github && (
-                <a
-                  href={user.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FontAwesomeIcon icon={faGithub} className="text-[clamp(1.2rem,4vw,2rem)] text-white" />
-                </a>
-              )}
+        <div className="flex items-center gap-4">
+          <div className="w-24 aspect-square shrink-0 rounded-full p-[3px] bg-gradient-to-br from-green-400 via-emerald-500 to-sky-500">
+            <div className="w-full h-full rounded-full bg-zinc-800 flex justify-center items-center font-semibold uppercase text-white text-[clamp(1.5rem,6vw,2.25rem)]">
+              {user?.username?.[0]}
             </div>
           </div>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-lg font-semibold text-white truncate">{user?.username}</p>
+            <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
+            {user?.bio && (
+              <p className="text-sm text-zinc-400 mt-2 break-words">{user.bio}</p>
+            )}
+          </div>
+
+          {user?.github && (
+            <a
+              href={user.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub profile"
+              className="shrink-0 w-11 h-11 flex justify-center items-center rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 transition"
+            >
+              <FontAwesomeIcon icon={faGithub} className="text-xl text-white" />
+            </a>
+          )}
         </div>
 
         {/* Edit form */}
         {isEditing && (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-2 pt-3 border-t border-zinc-800">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2 pt-4 border-t border-zinc-800">
             <input
               type="text"
               name="username"
-              placeholder="Enter your new username..."
+              placeholder="Enter your new username"
               value={username}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
               className="outline-none text-sm bg-zinc-800 text-zinc-200 placeholder-zinc-500 px-3 py-2 rounded border border-transparent focus:border-zinc-600"
             />
 
             <textarea
-              placeholder="Write about yourself in 100 character..."
+              placeholder="Write about yourself in 100 character"
               rows={3}
               value={bio}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBio(e.target.value)}
@@ -150,10 +175,10 @@ export default function ProfilePage() {
             <input
               type="url"
               name="github"
-              placeholder="https://github.com/username..."
+              placeholder="https://github.com/username"
               value={github}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGithub(e.target.value)}
-              className="outline-none text-sm bg-zinc-800 text-zinc-200 placeholder-zinc-500 px-3 py-2 rounded border border-transparent focus:border-zinc-600 resize-none"
+              className="outline-none text-sm bg-zinc-800 text-zinc-200 placeholder-zinc-500 px-3 py-2 rounded border border-transparent focus:border-zinc-600"
             />
             <button
               type="submit"

@@ -55,7 +55,6 @@ export default function RegisterPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
-          required
         />
         <input
           type="email"
@@ -63,7 +62,6 @@ export default function RegisterPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
-          required
         />
         <input
           type="password"
@@ -72,7 +70,6 @@ export default function RegisterPage() {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-blue-500"
           minLength={6}
-          required
         />
 
         {error && <p className="text-sm text-red-400">{error}</p>}

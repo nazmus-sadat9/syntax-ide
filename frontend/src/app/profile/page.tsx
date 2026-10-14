@@ -5,6 +5,8 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-regular-svg-icons";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import SearchOverlay from "../components/SearchOverlay";
 
 export default function ProfilePage() {
   const [username, setUsername] = useState<string>("");
@@ -13,11 +15,13 @@ export default function ProfilePage() {
   const [msg, setMsg] = useState<string>("");
   const [saving, setSaving] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const { user, loading, logout, updateUser } = useAuth();
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  const { user, loading, logout, updateUser, searchUsers } = useAuth();
 
+  // skeleton while loading
   if (loading) {
     return (
-      <div className="w-screen min-h-screen bg-zinc-950 flex justify-center items-center px-4">
+      <div className="w-screen min-h-screen bg-zinc-950 flex justify-center items-start pt-24 px-4">
         <nav className="w-full border-b border-zinc-800 fixed top-0 left-0 flex justify-between items-center px-[10%] py-4">
           <div className="h-4 w-12 rounded bg-zinc-800 animate-pulse" />
           <div className="flex gap-4 items-center">
@@ -44,11 +48,13 @@ export default function ProfilePage() {
     );
   }
 
+  // open the edit options
   const handleEdit = () => {
     setMsg("");
     setIsEditing(true);
   };
 
+  // close the edit options
   const handleClose = () => {
     setIsEditing(false);
     setUsername("");
@@ -57,6 +63,7 @@ export default function ProfilePage() {
     setMsg("");
   };
 
+  // handle the submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMsg("");
@@ -88,19 +95,36 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-zinc-950 flex justify-center items-center px-4 text-zinc-200">
+    <div className="w-screen min-h-screen bg-zinc-950 flex justify-center items-start pt-24 px-4 text-zinc-200">
+
+      {/* Navbar */}
       <nav className="w-full border-b border-zinc-800 fixed top-0 left-0 flex justify-between items-center px-[10%] py-4">
         <div>
           <Link className="text-white" href="/">Home</Link>
         </div>
 
         <div className="flex gap-4">
-          <h3 className="font-bold p-2 text-white">{user?.username}</h3>
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-2 p-2 text-white hover:text-zinc-300 transition"
+          >
+            <FontAwesomeIcon icon={faMagnifyingGlass} />
+
+            <span>Search</span>
+          </button>
           <button type="button" onClick={logout} className="p-2 text-white">
             Logout
           </button>
         </div>
       </nav>
+
+      {/* user Search overlay */}
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSearch={searchUsers}
+      />
 
       <div className="md:w-[80%] w-[90%] max-w-2xl flex flex-col gap-4 p-5 bg-zinc-900 border border-zinc-800 rounded-xl shadow-lg shadow-black/30">
         {/* Header */}

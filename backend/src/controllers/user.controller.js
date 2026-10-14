@@ -256,3 +256,37 @@ export const updateUser = async (req, res) => {
     });
   }
 }
+
+// GET api/user/searchUser
+export const searchUser = async (req, res) => {
+
+  try {
+    const user = User.findOne({ username: req.params.username })
+      .collation({ locale: "en", strength: 2 })
+      .select("username email bio github");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found."
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        bio: user.bio,
+        github: user.github
+      }
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Server error."
+    });
+  }
+}

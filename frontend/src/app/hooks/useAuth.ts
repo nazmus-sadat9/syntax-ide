@@ -24,6 +24,7 @@ export function useAuth() {
       return;
     }
 
+    // get user api
     fetch(`${API}/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -44,6 +45,7 @@ export function useAuth() {
 
   }, [router]);
 
+  // update user api
   const updateUser = async (changes: { username?: string; bio?: string; github?: string }) => {
     const token = localStorage.getItem("token");
 
@@ -65,10 +67,26 @@ export function useAuth() {
     return data.user;
   };
 
+  // search User api
+  const searchUsers = async (query: string): Promise<User[]> => {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`${API}/search?q=${encodeURIComponent(query)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.success === false) {
+      throw new Error(data.message || "Search failed");
+    }
+
+    return data.users ?? [];
+  };
+
   const logout = () => {
     clearSession();
     router.push("/login");
   };
 
-  return { user, loading, error, logout, updateUser };
+  return { user, loading, error, logout, updateUser, searchUsers };
 }

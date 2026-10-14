@@ -20,6 +20,6 @@ router.post("/google", googleLogin);
 router.patch("/me", protect, updateUser);
 
 // search user route
-router.get("/search", protect, searchUser);
+router.get("/search/:username", protect, searchUser);
 
 export default router;

@@ -261,7 +261,9 @@ export const updateUser = async (req, res) => {
 export const searchUser = async (req, res) => {
 
   try {
-    const user = User.findOne({ username: req.params.username })
+    const username = req.params.username.trim();
+
+    const user = await User.findOne({ username })
       .collation({ locale: "en", strength: 2 })
       .select("username email bio github");
 

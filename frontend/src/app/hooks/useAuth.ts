@@ -71,18 +71,23 @@ export function useAuth() {
   const searchUsers = async (query: string): Promise<User[]> => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`${API}/search?q=${encodeURIComponent(query)}`, {
+    const res = await fetch(`${API}/search/${encodeURIComponent(query)}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    // if user not found
+    if (res.status === 404) return [];
+
     const data = await res.json();
+
     if (!res.ok || data.success === false) {
       throw new Error(data.message || "Search failed");
     }
 
-    return data.users ?? [];
+    return data.users ? [data.user] : [];
   };
 
+  // logout an user
   const logout = () => {
     clearSession();
     router.push("/login");

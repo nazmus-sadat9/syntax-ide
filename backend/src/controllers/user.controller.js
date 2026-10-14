@@ -263,7 +263,7 @@ export const searchUser = async (req, res) => {
   try {
     const username = req.params.username.trim();
 
-    const user = await User.findOne({ username })
+    const user = await User.findOne({ username: { $regex: new RegExp(username, "i") } })
       .collation({ locale: "en", strength: 2 })
       .select("username email bio github");
 

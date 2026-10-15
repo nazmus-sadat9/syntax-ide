@@ -117,7 +117,7 @@ export const verifyEmail = async (req, res) => {
 
     // verify the given code
     const result = verifyCode(email, code);
-    if (!result) {
+    if (!result.ok) {
       return res.status(400).json({
         success: false,
         message: result.error
@@ -245,6 +245,23 @@ export const login = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error"
+    });
+  }
+};
+
+
+
+// POST /api/users/signOut
+export const signOut = (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      message: "Signed out successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Could not sign out"
     });
   }
 };

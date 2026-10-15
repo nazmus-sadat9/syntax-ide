@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, verifyEmail, resendCode, login, me, googleLogin, updateUser, searchUser } from "../controllers/user.controller.js";
+import { register, verifyEmail, resendCode, login, me, googleLogin, updateUser, searchUser, signOut } from "../controllers/user.controller.js";
 import { protect } from "../middleware/auth.js";
 
 const router = Router();
@@ -26,5 +26,8 @@ router.patch("/me", protect, updateUser);
 
 // search user route
 router.get("/search/:username", protect, searchUser);
+
+// signout route
+router.post("/signout", protect, signOut);
 
 export default router;

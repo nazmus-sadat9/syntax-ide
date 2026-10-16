@@ -488,28 +488,29 @@ export const searchUser = async (req, res) => {
     const username = req.params.username.trim();
 
     // find the user and get username, email, bio and github link
-    const user = await User.findOne({ username })
-      .collation({ locale: "en", strength: 2 })
+    const users = await User.find({
+      username: { $regex: username, $options: "i" }
+    })
       .select("username email bio github");
 
-    // if the user not exists
-    if (!user) {
+    // if no users found
+    if (users.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "User not found."
+        message: "No users found."
       });
     }
 
     // send searched user data by response  
     res.status(200).json({
       success: true,
-      user: {
+      users: users.map(user => ({
         id: user._id,
         username: user.username,
         email: user.email,
         bio: user.bio,
         github: user.github
-      }
+      }))
     });
 
   } catch (err) {

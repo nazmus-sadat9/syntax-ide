@@ -32,9 +32,7 @@ export default function RegisterPage() {
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      router.push("/");
+      router.push(`/verify?email=${email}`);
     } catch {
       setError("Cannot reach the server");
     } finally {

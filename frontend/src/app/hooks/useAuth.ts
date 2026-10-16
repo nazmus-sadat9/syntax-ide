@@ -95,7 +95,7 @@ export function useAuth() {
       throw new Error(data.message || "Search failed");
     }
 
-    return data.users ? [data.user] : [];
+    return data.users ?? [];
   };
 
   // logout an user

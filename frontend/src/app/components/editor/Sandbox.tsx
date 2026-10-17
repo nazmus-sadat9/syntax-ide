@@ -1,5 +1,8 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { tokenize } from "@/lib/highlighter/tokenize";
+import type { Token } from "@/lib/highlighter/types";
+import { tokenStyles } from "@/lib/highlighter/styles";
 
 type Tab = "html" | "css" | "js";
 
@@ -8,40 +11,42 @@ export default function Sandbox() {
   const [code, setCode] = useState({ html: "", css: "", js: "" });
   const [srcDoc, setSrcDoc] = useState("");
   const lineRef = useRef<HTMLDivElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
 
   const count: number = code[tab].split("\n").length;
   const numbers: string = Array.from({ length: count }, (_, i) => i + 1).join("\n");
+
+  // tokenize the current tab code (only highlight JS for simplicity)
+  const tokens: Token[] = useMemo(() => {
+    if (!code[tab]) return [];
+    // Use 'js' as language for all tabs; modify if you want more
+    return tokenize(code[tab], "js");
+  }, [code[tab]]);
 
   // load the previous code
   useEffect(() => {
     const s = localStorage.getItem("sandbox-files");
     if (s) setCode(JSON.parse(s));
-
   }, []);
 
-  // scroll when increase the line number
+  // sync line numbers and highlight overlay on scroll
   const syncScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
-    if (lineRef.current) lineRef.current.scrollTop = e.currentTarget.scrollTop;
+    const { scrollTop, scrollLeft } = e.currentTarget;
+    if (lineRef.current) lineRef.current.scrollTop = scrollTop;
+    if (preRef.current) {
+      preRef.current.scrollTop = scrollTop;
+      preRef.current.scrollLeft = scrollLeft;
+    }
   };
 
   const run = () => {
-
     // save the code in localStorage
     localStorage.setItem("sandbox-files", JSON.stringify(code));
 
     // Stop user JS from closing our <script> tag
     const safeJs = code.js.replace(/<\/script/gi, "<\\/script");
 
-    setSrcDoc(`<!DOCTYPE html>
-<html>
-<head>
-  <style>${code.css}</style>
-</head>
-<body>
-  ${code.html}
-  <script>${safeJs}<\/script>
-</body>
-</html>`);
+    setSrcDoc(`<!DOCTYPE html>\n<html>\n<head>\n  <style>${code.css}</style>\n</head>\n<body>\n  ${code.html}\n  <script>${safeJs}\</script>\n</body>\n</html>`);
   };
 
   const tabs: Tab[] = ["html", "css", "js"];
@@ -53,8 +58,7 @@ export default function Sandbox() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-3 py-1 cursor-pointer rounded-md border ${tab === t ? "bg-black text-white" : "bg-white text-black"
-              }`}
+            className={`px-3 py-1 cursor-pointer rounded-md border ${tab === t ? "bg-black text-white" : "bg-white text-black"}`}
           >
             {t.toUpperCase()}
           </button>
@@ -77,15 +81,34 @@ export default function Sandbox() {
             {numbers}
           </div>
 
-          <textarea
-            value={code[tab]}
-            autoCapitalize="none"
-            wrap="off"
-            onScroll={syncScroll}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCode({ ...code, [tab]: e.target.value })}
-            spellCheck={false}
-            className="flex-1 h-full resize-none outline-none py-2 pl-2 text-[#ddd] font-mono text-sm leading-6 whitespace-pre overflow-auto"
-          />
+          <div className="relative flex-1 h-full overflow-hidden">
+            {/* Highlight overlay */}
+            <pre
+              ref={preRef}
+              aria-hidden="true"
+              className="absolute inset-0 m-0 p-0 py-2.5 pl-2 font-mono whitespace-pre overflow-hidden pointer-events-none text-transparent leading-normal"
+            >
+              {tokens.map((token, index) => (
+                <span
+                  key={index}
+                  className={tokenStyles[token.type] || tokenStyles.word}
+                >
+                  {token.value}
+                </span>
+              ))}
+            </pre>
+
+            {/* Input area */}
+            <textarea
+              value={code[tab]}
+              autoCapitalize="none"
+              wrap="off"
+              onScroll={syncScroll}
+              onChange={(e) => setCode({ ...code, [tab]: e.target.value })}
+              spellCheck={false}
+              className="absolute inset-0 w-full h-full bg-transparent font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-[#ddd] caret-white leading-normal outline-none"
+            />
+          </div>
         </div>
 
         {/* allow-scripts only */}

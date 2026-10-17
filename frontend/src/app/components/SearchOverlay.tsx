@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import { useFriend } from "../hooks/useFriend";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export default function SearchOverlay({ open, onClose, onSearch }: Props) {
+  const { sendRequest } = useFriend();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const latest = useRef(0);

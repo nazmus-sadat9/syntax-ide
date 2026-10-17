@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
-type SearchUser = { username: string; email?: string; bio?: string };
+type SearchUser = { id: string; username: string; email?: string; bio?: string };
 
 type Props = {
   open: boolean;
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export default function SearchOverlay({ open, onClose, onSearch }: Props) {
-  const { sendRequest } = useFriend();
+  const { sendRequest, loading } = useFriend();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const latest = useRef(0);
@@ -23,6 +23,7 @@ export default function SearchOverlay({ open, onClose, onSearch }: Props) {
   const [results, setResults] = useState<SearchUser[]>([]);
   const [searching, setSearching] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [sent, setSent] = useState<string[]>([]);
 
   // Focus to input and stop the scrolling
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function SearchOverlay({ open, onClose, onSearch }: Props) {
       setQuery("");
       return;
     }
+
     const t = setTimeout(() => inputRef.current?.focus(), 100);
     document.body.style.overflow = "hidden";
     return () => {
@@ -74,6 +76,15 @@ export default function SearchOverlay({ open, onClose, onSearch }: Props) {
   };
 
   const q = query.trim();
+
+  // get the uset id for friend request
+  const handleAdd = async (id: string) => {
+    const data = await sendRequest(id);
+
+    if (data) {
+      setSent((prev) => [...prev, id]);
+    }
+  }
 
   return (
     <div
@@ -142,6 +153,8 @@ export default function SearchOverlay({ open, onClose, onSearch }: Props) {
           <ul className="flex flex-col gap-2">
             {results.map((u) => (
               <li key={u.username}>
+
+                {/* User info and dynamic route on click */}
                 <button
                   type="button"
                   onClick={() => goToProfile(u.username)}
@@ -157,6 +170,16 @@ export default function SearchOverlay({ open, onClose, onSearch }: Props) {
                     {u.email && <p className="text-xs text-zinc-500 truncate">{u.email}</p>}
                     {u.bio && <p className="text-sm text-zinc-400 mt-1 line-clamp-2">{u.bio}</p>}
                   </div>
+                </button>
+
+                {/* friend request btn */}
+                <button
+                  type="button"
+                  disabled={loading || sent.includes(u.id)}
+                  onClick={() => handleAdd(u.id)}
+                  className="shrink-0 text-xs px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-500 text-white disabled:bg-zinc-700 disabled:text-zinc-400"
+                >
+                  {sent.includes(u.id) ? "Sent" : "Add"}
                 </button>
               </li>
             ))}

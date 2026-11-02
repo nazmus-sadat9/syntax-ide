@@ -154,7 +154,7 @@ export const verifyEmail = async (req, res) => {
 // POST /api/users/resend-code
 export const resendCode = async (req, res) => {
   try {
-    // get the email from request 
+    // get the email from request
     const email = (req.body.email || "").toLowerCase().trim();
 
     // find the user by email
@@ -195,14 +195,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // check if the user is verified
-    if (!user.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: "Please verify your email first"
-      });
-    }
-
     // find the user by email
     const user = await User.findOne({ email: email.toLowerCase().trim() });
 
@@ -214,6 +206,14 @@ export const login = async (req, res) => {
       });
     }
 
+    // if the user has no password (google account)
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Use Google login for this account"
+      });
+    }
+
     // match the given password to saved password
     const isMatch = await bcrypt.compare(password, user.password);
 
@@ -222,6 +222,14 @@ export const login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password"
+      });
+    }
+
+    // check if the user is verified
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email first"
       });
     }
 
@@ -241,7 +249,7 @@ export const login = async (req, res) => {
     });
 
   } catch (error) {
-
+    console.error("Login error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error"
@@ -267,7 +275,7 @@ export const signOut = (req, res) => {
 };
 
 
-// GET /api/users/me 
+// GET /api/users/me
 export const me = (req, res) => {
 
   // send the user data
@@ -315,7 +323,8 @@ export const googleLogin = async (req, res) => {
       user = await User.create({
         username: name,
         email,
-        googleId: sub
+        googleId: sub,
+        isVerified: true,
       });
     }
 
@@ -472,6 +481,14 @@ export const deleteUser = async (req, res) => {
       });
     }
 
+    // delete the user
+    await User.findByIdAndDelete(user._id);
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted."
+    });
+
   } catch (err) {
     return res.status(500).json({
       status: false,
@@ -501,7 +518,7 @@ export const searchUser = async (req, res) => {
       });
     }
 
-    // send searched user data by response  
+    // send searched user data by response
     res.status(200).json({
       success: true,
       users: users.map(user => ({

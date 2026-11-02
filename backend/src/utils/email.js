@@ -1,24 +1,10 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-let transporter;
-
-// create the transporter
-function getTransporter() {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-  }
-  return transporter;
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendVerificationEmail(to, code) {
-  await getTransporter().sendMail({
-    from: process.env.EMAIL_USER,
+  const { error } = await resend.emails.send({
+    from: "Syntax IDE <onboarding@resend.dev>",
     to,
     subject: "Your verification code",
     html: `
@@ -27,4 +13,8 @@ export async function sendVerificationEmail(to, code) {
       <p>It expires in 3 minutes.</p>
     `,
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }

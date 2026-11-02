@@ -7,7 +7,12 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: "*",
+  origin: [
+    "http://localhost:3000",
+    "https://syntax-ide.vercel.app",
+  ],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 app.use("/api/users", authRoutes);

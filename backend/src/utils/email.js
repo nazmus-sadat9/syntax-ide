@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 
+console.log("Has Resend key:", !!process.env.RESEND_API_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendVerificationEmail(to, code) {
@@ -13,6 +14,9 @@ export async function sendVerificationEmail(to, code) {
       <p>It expires in 3 minutes.</p>
     `,
   });
+
+  console.log("Resend data:", data);
+  console.log("Resend error:", error);
 
   if (error) {
     throw new Error(error.message);

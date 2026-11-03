@@ -4,7 +4,7 @@ console.log("Has Resend key:", !!process.env.RESEND_API_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendVerificationEmail(to, code) {
-  const { error } = await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: "Syntax IDE <onboarding@resend.dev>",
     to,
     subject: "Your verification code",

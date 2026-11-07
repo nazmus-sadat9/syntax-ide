@@ -1,7 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 
-export const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-export const MODEL = process.env.GEMINI_MODEL;
+export const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: { apiVersion: "v1beta" },
+});
+
+export const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 export const SYSTEM = `You are a code assistant inside a web code editor.
 The user's current file is provided. When asked to find bugs, list each bug

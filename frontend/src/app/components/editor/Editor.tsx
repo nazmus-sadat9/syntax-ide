@@ -218,7 +218,7 @@ const Editor = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="flex gap-4">
                 {/* execution button */}
                 <button
                   type="button"

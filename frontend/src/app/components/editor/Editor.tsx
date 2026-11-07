@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Sidebar from "./sidebar/Sidebar";
+import AiSidebar from "./AiSidebar";
 import Header from "./header/Header";
 import { tokenize } from "@/lib/highlighter/tokenize";
 import type { Token } from "@/lib/highlighter/types";
@@ -26,6 +27,7 @@ const Editor = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [language, setLanguage] = useState<Language>("js");
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [showAi, setShowAi] = useState<boolean>(false);
 
   // references
   const lineRef = useRef<HTMLDivElement>(null);
@@ -216,8 +218,8 @@ const Editor = () => {
                 </div>
               </div>
 
-              {/* Run Button */}
               <div>
+                {/* execution button */}
                 <button
                   type="button"
                   onClick={handleRun}
@@ -225,6 +227,15 @@ const Editor = () => {
                   className="py-1 px-4 bg-green-600 hover:bg-green-500 rounded-md cursor-pointer text-white disabled:opacity-40 text-sm transition-colors"
                 >
                   {isRunning ? "Running..." : "Run"}
+                </button>
+
+                {/* AI chat sidebar button*/}
+                <button
+                  type="button"
+                  onClick={() => setShowAi(!showAi)}
+                  className="bg-zinc-800 py-1 px-2 text-white rounded-md text-sm"
+                >
+                  AI
                 </button>
               </div>
             </div>
@@ -281,6 +292,14 @@ const Editor = () => {
                 className="absolute inset-0 w-full h-full bg-transparent font-mono resize-none overflow-auto whitespace-pre py-2.5 pl-2 text-transparent caret-white leading-normal outline-none"
               />
             </div>
+
+            {/* Ai sidebar  */}
+            {showAi && <AiSidebar
+              code={code}
+              filename={current}
+              language={language}
+            />}
+
           </div>
 
           {/* Output Panel */}

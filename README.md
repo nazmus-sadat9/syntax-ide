@@ -4,7 +4,7 @@ A code editor that lives in your browser. I built Syntax IDE so I could write an
 
 It's also growing into something more social: profiles, friends, and (eventually) writing code together with someone live.
 
-**Live:** [syntax-ide.vercel.app](https://syntax-ide.vercel.app)
+**Live:** [syntax-ide](https://syntax-ide.vercel.app)
 
 ---
 
@@ -49,7 +49,7 @@ I'm building this step by step, so here's the honest list of what isn't done yet
 
 ## Author
 
-Made by **Nazmus Sadat**. See my other work at [prosadat.vercel.app](https://prosadat.vercel.app).
+Made by **Nazmus Sadat**. See my [portfolio](https://prosadat.vercel.app).
 
 ## License
 
